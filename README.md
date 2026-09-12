@@ -14,7 +14,7 @@ Monitor actions are applied live, then captured into a marked block in `~/.confi
 
 Before accepting a saved monitor layout, the helper reloads Hyprland and checks `hyprctl configerrors`. A rejected layout is rolled back automatically. Idle values are written atomically to `~/.config/omarchy/shell.json` while preserving the rest of the file; lock time is always kept at or after the screensaver time.
 
-Other settings use their native Omarchy persistence paths: text size uses the Omarchy command, cursor size uses GNOME settings, and night-light scheduling uses the user Hyprsunset configuration.
+Other settings use their native Omarchy persistence paths: text size uses the Omarchy command, cursor size uses GNOME settings, and the Night Light button uses Omarchy's own toggle command.
 
 ## Install
 
