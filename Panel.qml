@@ -412,6 +412,26 @@ Panel {
     root.monitorLabels = parsed.labels
     root.monitorInfoList = parsed.list
     root.monitorInfoByName = parsed.byName
+
+    // omarchy-monitor-state is the shared lightweight source for the panel,
+    // but on some single-display setups it can briefly return an empty list
+    // while hyprctl already has the monitor and its available modes. Keep
+    // the richer query as a fallback so the lone display still gets controls.
+    if (root.displays.length === 0 && parsed.list.length > 0) {
+      var fallbackDisplays = []
+      for (var i = 0; i < parsed.list.length; i++) {
+        var info = parsed.list[i]
+        fallbackDisplays.push({
+          name: info.name,
+          enabled: !info.disabled,
+          focused: info.focused,
+          width: info.width,
+          height: info.height
+        })
+      }
+      root.displays = fallbackDisplays
+      root.enabledDisplayCount = fallbackDisplays.filter(function(display) { return display.enabled }).length
+    }
     fixAnyOverlap()
   }
 
