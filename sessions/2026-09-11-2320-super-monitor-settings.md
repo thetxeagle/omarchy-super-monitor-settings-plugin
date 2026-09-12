@@ -53,6 +53,8 @@ Combined the Omarchy monitor extender UI with display controls and persistent id
 - Full Quickshell runtime launch was attempted but could not start in this headless session because no Wayland/X11 display is available.
 - Verified the local shell layout no longer contains the duplicate stock `omarchy.monitor` entry after creating `/home/soulshocker/.config/omarchy/shell.json.bak.super-monitor-settings-20260911`.
 - Verified plugin schema, Bash syntax, diff whitespace, and absence of stale global refresh-dropdown bindings.
+- Fixed monitor action buttons to an explicit `86x28` size.
+- Added pointer-leave cleanup and separate keyboard-vs-pointer monitor selection state.
 
 ## Next Steps
 

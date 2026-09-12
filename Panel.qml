@@ -40,6 +40,8 @@ Panel {
   // Set by the dropdown itself (onPopupOpenChanged) so keyCatcher can
   // suspend without holding a direct id reference to it.
   property int openMonitorDropdownCount: 0
+  property int hoveredMonitorRow: -1
+  property bool monitorKeyboardActive: false
   // One rotation dropdown per Displays row (a Repeater), so this counts
   // open popups rather than tracking a single id/bool.
   property int openRotationDropdownCount: 0
@@ -1157,6 +1159,7 @@ Panel {
       blocked: root.openMonitorDropdownCount > 0 || root.openRotationDropdownCount > 0
       onMoveRequested: function(dx, dy) {
         if (!root.cursorActive) { root.cursorActive = true; return }
+        root.monitorKeyboardActive = true
         if (dy !== 0) root.moveCursor(dy)
         else if (dx !== 0) {
           if (root.focusSection === "brightness") root.adjustBrightness(dx * 5)
@@ -1752,6 +1755,7 @@ Panel {
     readonly property var info: display ? root.monitorInfoByName[display.name] : null
 
     hasCursor: root.cursorActive && root.focusSection === "monitors" && root.selectedIndex === rowIndex
+      && (root.monitorKeyboardActive || root.hoveredMonitorRow === rowIndex)
     onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(monitorRow)
     // Focused is communicated in the label. Do not paint it as a selected
     // row, otherwise hovering another monitor leaves two rows highlighted.
@@ -1854,6 +1858,7 @@ Panel {
           Button {
             id: toggleButton
             width: Style.space(86)
+            height: Style.space(28)
             text: monitorRow.display.enabled ? "Turn Off" : "Turn On"
             fontSize: Style.font.caption
             foreground: root.bar.foreground
@@ -1863,11 +1868,13 @@ Panel {
             bordered: true
             enabled: monitorRow.canToggle
             opacity: enabled ? 1.0 : 0.4
-            hasCursor: root.cursorActive && root.focusSection === "monitors" && root.selectedIndex === monitorRow.rowIndex
+            hasCursor: monitorRow.hasCursor
 
             onClicked: root.toggleDisplay(monitorRow.display.name, monitorRow.display.enabled)
             onHovered: function(isHovered) {
               if (!isHovered || root.reflowingText) return
+              root.monitorKeyboardActive = false
+              root.hoveredMonitorRow = monitorRow.rowIndex
               root.cursorActive = true
               root.focusSection = "monitors"
               root.selectedIndex = monitorRow.rowIndex
@@ -1881,10 +1888,19 @@ Panel {
     // rather than being one big click target, so this only syncs the
     // keyboard cursor to mouse hover without swallowing the button's clicks.
     HoverHandler {
-      onHoveredChanged: if (hovered && !root.reflowingText) {
-        root.cursorActive = true
-        root.focusSection = "monitors"
-        root.selectedIndex = monitorRow.rowIndex
+      onHoveredChanged: {
+        if (hovered && !root.reflowingText) {
+          root.monitorKeyboardActive = false
+          root.hoveredMonitorRow = monitorRow.rowIndex
+          root.cursorActive = true
+          root.focusSection = "monitors"
+          root.selectedIndex = monitorRow.rowIndex
+        } else if (!hovered && root.hoveredMonitorRow === monitorRow.rowIndex) {
+          root.hoveredMonitorRow = -1
+          if (!root.monitorKeyboardActive && root.focusSection === "monitors"
+              && root.selectedIndex === monitorRow.rowIndex)
+            root.cursorActive = false
+        }
       }
     }
   }
