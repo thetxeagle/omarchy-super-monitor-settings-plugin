@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "io.github.soulshocker.super-monitor-settings",
+  "id": "io.github.thetxeagle.super-monitor-settings",
   "name": "Super Monitor Settings",
   "version": "0.1.0",
-  "author": "Soulshocker",
+  "author": "thetxeagle",
   "license": "MIT",
   "description": "Persistent all-in-one Omarchy monitor, display, idle, and layout settings.",
   "kinds": [

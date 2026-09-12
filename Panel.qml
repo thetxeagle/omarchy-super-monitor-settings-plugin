@@ -9,8 +9,8 @@ import "Model.js" as Model
 
 Panel {
   id: root
-  moduleName: "io.github.soulshocker.super-monitor-settings"
-  ipcTarget: "io.github.soulshocker.super-monitor-settings"
+  moduleName: "io.github.thetxeagle.super-monitor-settings"
+  ipcTarget: "io.github.thetxeagle.super-monitor-settings"
   manageIpc: false
 
   // manageIpc: false so this panel can own the single IpcHandler the target
@@ -390,7 +390,7 @@ Panel {
   }
 
   IpcHandler {
-    target: "io.github.soulshocker.super-monitor-settings"
+    target: "io.github.thetxeagle.super-monitor-settings"
 
     function brightness(percent: string): string { return root.brightnessIpc(percent) }
     function state(): string { return root.stateIpc() }

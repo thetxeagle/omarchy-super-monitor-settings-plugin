@@ -27,16 +27,19 @@ omarchy plugin add https://github.com/thetxeagle/omarchy-super-monitor-settings-
 Open the monitor icon in the Omarchy bar. The plugin replaces the stock display widget in place. Move it with:
 
 ```sh
-omarchy bar move io.github.soulshocker.super-monitor-settings --section right
+omarchy bar move io.github.thetxeagle.super-monitor-settings --section right
 ```
 
 If an older install left both widgets on the bar, run this one-time migration:
 
 ```sh
 omarchy plugin disable omarchy.monitor
-omarchy plugin enable io.github.soulshocker.super-monitor-settings --section right
+omarchy plugin disable io.github.soulshocker.super-monitor-settings
+omarchy plugin enable io.github.thetxeagle.super-monitor-settings --section right
 omarchy restart shell
 ```
+
+The `disable` line removes the previous Soulshocker-branded installation before enabling the renamed plugin.
 
 Fresh installs use `omarchy.clonedFrom: omarchy.monitor` and replace the stock widget automatically.
 

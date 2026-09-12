@@ -56,6 +56,7 @@ Combined the Omarchy monitor extender UI with display controls and persistent id
 - Fixed monitor action buttons to an explicit `86x28` size.
 - Added pointer-leave cleanup and separate keyboard-vs-pointer monitor selection state.
 - Corrected the README install command to use the public GitHub repository URL.
+- Migrated the plugin identity and active local install from `soulshocker` to `thetxeagle`.
 
 ## Next Steps
 

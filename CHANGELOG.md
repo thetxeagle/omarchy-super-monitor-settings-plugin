@@ -11,3 +11,4 @@
 ### Fixed
 
 - Corrected the README install command to use the GitHub repository URL instead of a machine-specific home path.
+- Renamed the published plugin identity from `io.github.soulshocker.super-monitor-settings` to `io.github.thetxeagle.super-monitor-settings`.
