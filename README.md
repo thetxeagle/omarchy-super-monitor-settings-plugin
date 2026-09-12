@@ -1,0 +1,1 @@
+# omarchy-super-monitor-settings-plugin
