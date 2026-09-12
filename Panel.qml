@@ -39,8 +39,7 @@ Panel {
   property int cursorSize: 24
   // Set by the dropdown itself (onPopupOpenChanged) so keyCatcher can
   // suspend without holding a direct id reference to it.
-  property bool refreshRateDropdownOpen: false
-  property bool resolutionDropdownOpen: false
+  property int openMonitorDropdownCount: 0
   // One rotation dropdown per Displays row (a Repeater), so this counts
   // open popups rather than tracking a single id/bool.
   property int openRotationDropdownCount: 0
@@ -113,13 +112,19 @@ Panel {
   readonly property var lockStops: [60, 120, 180, 300, 600, 900, 1800, 3600]
   readonly property string shellConfigPath: Quickshell.env("HOME") + "/.config/omarchy/shell.json"
   property var shellConfig: ({})
+  property bool shellConfigLoaded: false
+  property int screensaverPreviewIndex: -1
+  property int lockPreviewIndex: -1
 
   function reloadShellConfig() {
     var text = shellConfigFile.text()
-    if (!text || !text.trim()) { root.shellConfig = {}; return }
+    if (!text || !text.trim()) { root.shellConfig = {}; root.shellConfigLoaded = false; return }
     try {
       var parsed = JSON.parse(text)
       root.shellConfig = parsed && typeof parsed === "object" ? parsed : {}
+      root.shellConfigLoaded = true
+      root.screensaverPreviewIndex = -1
+      root.lockPreviewIndex = -1
     } catch (e) {
       console.warn(root.moduleName + ": failed to parse shell.json:", e)
     }
@@ -132,7 +137,7 @@ Panel {
     atomicWrites: true
     printErrors: false
     onLoaded: root.reloadShellConfig()
-    onLoadFailed: root.shellConfig = {}
+    onLoadFailed: { root.shellConfig = {}; root.shellConfigLoaded = false }
     onFileChanged: reload()
   }
 
@@ -149,7 +154,7 @@ Panel {
   }
 
   function currentScreensaverIndex() {
-    return Model.nearestStopIndex(screensaverStops, screensaverSeconds)
+    return screensaverPreviewIndex >= 0 ? screensaverPreviewIndex : Model.nearestStopIndex(screensaverStops, screensaverSeconds)
   }
 
   function screensaverStopLabel(index) {
@@ -158,7 +163,7 @@ Panel {
   }
 
   function saveIdleValues(screensaver, lock) {
-    if (!root.shellConfig || !root.shellConfig.bar) {
+    if (!root.shellConfigLoaded) {
       console.warn(root.moduleName + ": shell.json is not loaded; refusing to overwrite it")
       return
     }
@@ -170,11 +175,12 @@ Panel {
   }
 
   function setScreensaverSeconds(seconds) {
+    root.screensaverPreviewIndex = Model.nearestStopIndex(screensaverStops, Number(seconds))
     saveIdleValues(seconds, Math.max(lockSeconds, seconds))
   }
 
   function currentLockIndex() {
-    return Model.nearestStopIndex(lockStops, lockSeconds)
+    return lockPreviewIndex >= 0 ? lockPreviewIndex : Model.nearestStopIndex(lockStops, lockSeconds)
   }
 
   function lockStopLabel(index) {
@@ -183,6 +189,7 @@ Panel {
   }
 
   function setLockSeconds(seconds) {
+    root.lockPreviewIndex = Model.nearestStopIndex(lockStops, Number(seconds))
     saveIdleValues(screensaverSeconds, Math.max(screensaverSeconds, seconds))
   }
 
@@ -209,7 +216,6 @@ Panel {
     list.push("screensaver")
     list.push("lock")
     list.push("scale")
-    if (refreshRateOptions.length > 1) list.push("refreshrate")
     if (showMirrorSection) list.push("mirror")
     list.push("cursorsize")
     if (displays.length > 1) list.push("monitors")
@@ -229,7 +235,6 @@ Panel {
     if (section === "textsize") return 0    // slider sentinel at -1, like brightness
     if (section === "scale") return 0       // slider sentinel at -1, like text size
     if (section === "screensaver" || section === "lock") return 0
-    if (section === "refreshrate") return 0   // dropdown sentinel at -1
     if (section === "mirror") return mirrorOptions.length
     if (section === "monitors") return displays.length
     if (section === "cursorsize") return cursorSizeOptions.length
@@ -242,13 +247,12 @@ Panel {
     // from j/k's perspective (h/l or the dropdown's own popup handles
     // movement within them). "monitors" is a vertical list of rows instead.
     return section === "brightness" || section === "textsize" || section === "scale"
-      || section === "screensaver" || section === "lock" || section === "refreshrate" || section === "mirror"
+      || section === "screensaver" || section === "lock" || section === "mirror"
       || section === "cursorsize"
   }
 
   function sectionFirstIndex(section) {
-    if (section === "brightness" || section === "textsize" || section === "scale" || section === "screensaver" || section === "lock"
-        || section === "refreshrate") return -1
+    if (section === "brightness" || section === "textsize" || section === "scale" || section === "screensaver" || section === "lock") return -1
     return 0
   }
 
@@ -316,10 +320,6 @@ Panel {
       setCursorSize(cursorSizeOptions[selectedIndex])
       return
     }
-    if (focusSection === "refreshrate") {
-      refreshRateDropdown.open()
-      return
-    }
     if (focusSection === "restart" && selectedIndex === 0) {
       restartShell()
       return
@@ -337,10 +337,9 @@ Panel {
     }
     var count = sectionCount(focusSection)
     if (sectionIsSingleRow(focusSection)) {
-      // brightness/text size/scale/screensaver/refresh rate use the -1
+      // brightness/text size/scale/screensaver/lock use the -1
       // sentinel; mirror/cursor-size clamp into their option row.
-      if (focusSection === "brightness" || focusSection === "textsize" || focusSection === "scale" || focusSection === "screensaver"
-          || focusSection === "refreshrate") selectedIndex = -1
+      if (focusSection === "brightness" || focusSection === "textsize" || focusSection === "scale" || focusSection === "screensaver" || focusSection === "lock") selectedIndex = -1
       else if (selectedIndex < 0 || selectedIndex >= count) selectedIndex = 0
       return
     }
@@ -566,13 +565,8 @@ Panel {
     runAction(["hyprctl", "eval", monitorEvalExpr(info)])
   }
 
-  // ---- Refresh rate: focused display only, same convention as Scale ----
-  function focusedMonitorInfo() {
-    return root.monitorInfoByName[root.focusedMonitor] || null
-  }
-
-  readonly property var refreshRateOptions: {
-    var info = focusedMonitorInfo()
+  // ---- Refresh rate: each display owns its own mode selector ----
+  function refreshRateOptionsFor(info) {
     if (!info) return []
     var rates = Model.refreshRatesFor(info.availableModes, info.width, info.height)
     var opts = []
@@ -580,16 +574,19 @@ Panel {
     return opts
   }
 
-  readonly property string refreshRateValue: {
-    var info = focusedMonitorInfo()
+  function focusedMonitorInfo() {
+    return root.monitorInfoByName[root.focusedMonitor] || null
+  }
+
+  function refreshRateValueFor(info) {
     if (!info) return ""
     var rates = Model.refreshRatesFor(info.availableModes, info.width, info.height)
     var nearest = Model.nearestRate(rates, info.refreshRate)
     return isFinite(nearest) ? String(nearest) : ""
   }
 
-  function setRefreshRate(value) {
-    var info = focusedMonitorInfo()
+  function setRefreshRate(name, value) {
+    var info = root.monitorInfoByName[name]
     if (!info) return
     var rate = Number(value)
     if (!isFinite(rate)) return
@@ -1157,7 +1154,7 @@ Panel {
       // plain root properties rather than reaching for a Dropdown by id,
       // since they live behind conditionally-visible/repeated cards this
       // binding can evaluate before they exist.
-      blocked: root.refreshRateDropdownOpen || root.resolutionDropdownOpen || root.openRotationDropdownCount > 0
+      blocked: root.openMonitorDropdownCount > 0 || root.openRotationDropdownCount > 0
       onMoveRequested: function(dx, dy) {
         if (!root.cursorActive) { root.cursorActive = true; return }
         if (dy !== 0) root.moveCursor(dy)
@@ -1482,6 +1479,7 @@ Panel {
                   integer: true
                   tickCount: root.screensaverStops.length
                   value: root.currentScreensaverIndex()
+                  onMoved: function(v) { root.screensaverPreviewIndex = Math.round(v) }
                   onReleased: function(v) { root.setScreensaverSeconds(root.screensaverStops[Math.round(v)]) }
                 }
 
@@ -1548,6 +1546,7 @@ Panel {
                   integer: true
                   tickCount: root.lockStops.length
                   value: root.currentLockIndex()
+                  onMoved: function(v) { root.lockPreviewIndex = Math.round(v) }
                   onReleased: function(v) { root.setLockSeconds(root.lockStops[Math.round(v)]) }
                 }
 
@@ -1625,38 +1624,6 @@ Panel {
                     root.focusSection = "scale"
                     root.selectedIndex = -1
                   }
-                }
-              }
-            }
-
-            // ---------- Refresh rate (focused display) ----------
-            Column {
-              Layout.fillWidth: true
-              visible: root.refreshRateOptions.length > 1
-              spacing: Style.space(6)
-
-              PanelSectionHeader {
-                text: "REFRESH RATE"
-                foreground: root.bar.foreground
-                fontFamily: root.bar.fontFamily
-              }
-
-              Dropdown {
-                id: refreshRateDropdown
-                width: parent.width
-                showLabel: false
-                options: root.refreshRateOptions
-                value: root.refreshRateValue
-                foreground: root.bar.foreground
-                fontFamily: root.bar.fontFamily
-                hasCursor: root.cursorActive && root.focusSection === "refreshrate" && root.selectedIndex === -1
-                onPopupOpenChanged: root.refreshRateDropdownOpen = popupOpen
-                onChanged: function(v) { root.setRefreshRate(v) }
-                onHovered: function(isHovered) {
-                  if (!isHovered || root.reflowingText) return
-                  root.cursorActive = true
-                  root.focusSection = "refreshrate"
-                  root.selectedIndex = -1
                 }
               }
             }
@@ -1838,17 +1805,35 @@ Panel {
           width: parent.width
         }
 
-        Dropdown {
-          id: resolutionDropdown
+        Row {
           width: parent.width
-          showLabel: false
-          options: root.resolutionOptionsFor(monitorRow.info)
-          value: monitorRow.info ? (monitorRow.info.width + "x" + monitorRow.info.height) : ""
-          foreground: root.bar.foreground
-          fontFamily: root.bar.fontFamily
-          visible: options.length > 1
-          onPopupOpenChanged: root.resolutionDropdownOpen = popupOpen
-          onChanged: function(v) { root.setResolution(monitorRow.display.name, v) }
+          spacing: Style.space(6)
+
+          Dropdown {
+            id: resolutionDropdown
+            width: Math.floor((parent.width - parent.spacing) / 2)
+            showLabel: false
+            options: root.resolutionOptionsFor(monitorRow.info)
+            value: monitorRow.info ? (monitorRow.info.width + "x" + monitorRow.info.height) : ""
+            foreground: root.bar.foreground
+            fontFamily: root.bar.fontFamily
+            visible: options.length > 1
+            onPopupOpenChanged: root.openMonitorDropdownCount += popupOpen ? 1 : -1
+            onChanged: function(v) { root.setResolution(monitorRow.display.name, v) }
+          }
+
+          Dropdown {
+            id: refreshDropdown
+            width: Math.floor((parent.width - parent.spacing) / 2)
+            showLabel: false
+            options: root.refreshRateOptionsFor(monitorRow.info)
+            value: root.refreshRateValueFor(monitorRow.info)
+            foreground: root.bar.foreground
+            fontFamily: root.bar.fontFamily
+            visible: options.length > 1
+            onPopupOpenChanged: root.openMonitorDropdownCount += popupOpen ? 1 : -1
+            onChanged: function(v) { root.setRefreshRate(monitorRow.display.name, v) }
+          }
         }
       }
 
@@ -1867,6 +1852,7 @@ Panel {
 
       Button {
         id: toggleButton
+        width: Style.space(86)
         text: monitorRow.display.enabled ? "Turn Off" : "Turn On"
         fontSize: Style.font.caption
         foreground: root.bar.foreground

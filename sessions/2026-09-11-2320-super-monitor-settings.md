@@ -16,6 +16,9 @@ Combined the Omarchy monitor extender UI with display controls and persistent id
 - Added resolution selection to each monitor row.
 - Added a persistence helper that writes a marked `monitors.lua` block, creates a first-write backup, validates with Hyprland, and rolls back rejected configs.
 - Added a plugin manifest and user-facing README.
+- Fixed upgrade behavior documentation for replacing the stock `omarchy.monitor` widget.
+- Added live drag previews for idle sliders so they do not snap back while `shell.json` reloads.
+- Moved refresh-rate selection into each monitor row and aligned resolution/refresh/rotation/action controls.
 
 ## Files Changed
 
@@ -46,6 +49,7 @@ Combined the Omarchy monitor extender UI with display controls and persistent id
 - `git diff --check` passed.
 - JSON-to-Lua monitor rendering was checked with a representative monitor payload.
 - Full Quickshell runtime launch was attempted but could not start in this headless session because no Wayland/X11 display is available.
+- Verified the local shell layout no longer contains the duplicate stock `omarchy.monitor` entry after creating `/home/soulshocker/.config/omarchy/shell.json.bak.super-monitor-settings-20260911`.
 
 ## Next Steps
 

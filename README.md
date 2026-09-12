@@ -30,6 +30,16 @@ Open the monitor icon in the Omarchy bar. The plugin replaces the stock display 
 omarchy bar move io.github.soulshocker.super-monitor-settings --section right
 ```
 
+If an older install left both widgets on the bar, run this one-time migration:
+
+```sh
+omarchy plugin disable omarchy.monitor
+omarchy plugin enable io.github.soulshocker.super-monitor-settings --section right
+omarchy restart shell
+```
+
+Fresh installs use `omarchy.clonedFrom: omarchy.monitor` and replace the stock widget automatically.
+
 ## Requirements
 
 Omarchy with Hyprland, `hyprctl`, `jq`, `gsettings`, and the standard Omarchy monitor helpers. No daemon or Lua customization is required.
