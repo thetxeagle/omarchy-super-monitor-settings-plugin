@@ -220,7 +220,7 @@ Panel {
     list.push("scale")
     if (showMirrorSection) list.push("mirror")
     list.push("cursorsize")
-    if (displays.length > 1) list.push("monitors")
+    if (displays.length > 0) list.push("monitors")
     return list
   }
 
@@ -1694,7 +1694,10 @@ Panel {
               Layout.fillWidth: true
               Layout.columnSpan: 2
               spacing: Style.space(10)
-              visible: root.displays.length > 1
+              // A single display still needs resolution, refresh, rotation,
+              // and power controls. Only the arrangement diagram is
+              // restricted to multi-monitor setups.
+              visible: root.displays.length > 0
 
               PanelSectionHeader {
                 text: "DISPLAYS"
@@ -1825,7 +1828,7 @@ Panel {
             value: monitorRow.info ? (monitorRow.info.width + "x" + monitorRow.info.height) : ""
             foreground: root.bar.foreground
             fontFamily: root.bar.fontFamily
-            visible: options.length > 1
+            visible: options.length > 0
             onPopupOpenChanged: root.openMonitorDropdownCount += popupOpen ? 1 : -1
             onChanged: function(v) { root.setResolution(monitorRow.display.name, v) }
           }
@@ -1838,7 +1841,7 @@ Panel {
             value: root.refreshRateValueFor(monitorRow.info)
             foreground: root.bar.foreground
             fontFamily: root.bar.fontFamily
-            visible: options.length > 1
+            visible: options.length > 0
             onPopupOpenChanged: root.openMonitorDropdownCount += popupOpen ? 1 : -1
             onChanged: function(v) { root.setRefreshRate(monitorRow.display.name, v) }
           }
