@@ -1753,7 +1753,9 @@ Panel {
 
     hasCursor: root.cursorActive && root.focusSection === "monitors" && root.selectedIndex === rowIndex
     onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(monitorRow)
-    current: isFocused
+    // Focused is communicated in the label. Do not paint it as a selected
+    // row, otherwise hovering another monitor leaves two rows highlighted.
+    current: false
     foreground: root.bar.foreground
     fill: Style.hoverFillFor(root.bar.foreground, Color.accent)
     currentFill: Style.selectedFillFor(root.bar.foreground, Color.accent)
@@ -1764,7 +1766,8 @@ Panel {
       id: monitorInner
       anchors.left: parent.left
       anchors.right: parent.right
-      anchors.verticalCenter: parent.verticalCenter
+      anchors.top: parent.top
+      anchors.bottom: parent.bottom
       anchors.leftMargin: Style.space(6)
       anchors.rightMargin: Style.space(6)
       spacing: Style.space(8)
@@ -1780,7 +1783,7 @@ Panel {
       }
 
       Column {
-        width: parent.width - Style.space(22) - rotationDropdown.width - toggleButton.width - Style.space(24)
+        width: parent.width - Style.space(22) - Style.space(8)
         anchors.verticalCenter: parent.verticalCenter
         spacing: Style.space(1)
 
@@ -1806,12 +1809,13 @@ Panel {
         }
 
         Row {
+          id: monitorControls
           width: parent.width
           spacing: Style.space(6)
 
           Dropdown {
             id: resolutionDropdown
-            width: Math.floor((parent.width - parent.spacing) / 2)
+            width: Math.floor((parent.width - parent.spacing * 3 - Style.space(84) - Style.space(86)) / 2)
             showLabel: false
             options: root.resolutionOptionsFor(monitorRow.info)
             value: monitorRow.info ? (monitorRow.info.width + "x" + monitorRow.info.height) : ""
@@ -1824,7 +1828,7 @@ Panel {
 
           Dropdown {
             id: refreshDropdown
-            width: Math.floor((parent.width - parent.spacing) / 2)
+            width: Math.floor((parent.width - parent.spacing * 3 - Style.space(84) - Style.space(86)) / 2)
             showLabel: false
             options: root.refreshRateOptionsFor(monitorRow.info)
             value: root.refreshRateValueFor(monitorRow.info)
@@ -1834,42 +1838,41 @@ Panel {
             onPopupOpenChanged: root.openMonitorDropdownCount += popupOpen ? 1 : -1
             onChanged: function(v) { root.setRefreshRate(monitorRow.display.name, v) }
           }
-        }
-      }
 
-      Dropdown {
-        id: rotationDropdown
-        width: Style.space(84)
-        showLabel: false
-        options: root.rotationOptions
-        value: monitorRow.info ? String(monitorRow.info.transform) : "0"
-        foreground: root.bar.foreground
-        fontFamily: root.bar.fontFamily
-        anchors.verticalCenter: parent.verticalCenter
-        onPopupOpenChanged: root.openRotationDropdownCount += popupOpen ? 1 : -1
-        onChanged: function(v) { root.setTransform(monitorRow.display.name, v) }
-      }
+          Dropdown {
+            id: rotationDropdown
+            width: Style.space(84)
+            showLabel: false
+            options: root.rotationOptions
+            value: monitorRow.info ? String(monitorRow.info.transform) : "0"
+            foreground: root.bar.foreground
+            fontFamily: root.bar.fontFamily
+            onPopupOpenChanged: root.openRotationDropdownCount += popupOpen ? 1 : -1
+            onChanged: function(v) { root.setTransform(monitorRow.display.name, v) }
+          }
 
-      Button {
-        id: toggleButton
-        width: Style.space(86)
-        text: monitorRow.display.enabled ? "Turn Off" : "Turn On"
-        fontSize: Style.font.caption
-        foreground: root.bar.foreground
-        fontFamily: root.bar.fontFamily
-        horizontalPadding: Style.spacing.sm
-        verticalPadding: Style.spacing.labelGap
-        bordered: true
-        enabled: monitorRow.canToggle
-        opacity: enabled ? 1.0 : 0.4
-        hasCursor: root.cursorActive && root.focusSection === "monitors" && root.selectedIndex === monitorRow.rowIndex
+          Button {
+            id: toggleButton
+            width: Style.space(86)
+            text: monitorRow.display.enabled ? "Turn Off" : "Turn On"
+            fontSize: Style.font.caption
+            foreground: root.bar.foreground
+            fontFamily: root.bar.fontFamily
+            horizontalPadding: Style.spacing.sm
+            verticalPadding: Style.spacing.labelGap
+            bordered: true
+            enabled: monitorRow.canToggle
+            opacity: enabled ? 1.0 : 0.4
+            hasCursor: root.cursorActive && root.focusSection === "monitors" && root.selectedIndex === monitorRow.rowIndex
 
-        onClicked: root.toggleDisplay(monitorRow.display.name, monitorRow.display.enabled)
-        onHovered: function(isHovered) {
-          if (!isHovered || root.reflowingText) return
-          root.cursorActive = true
-          root.focusSection = "monitors"
-          root.selectedIndex = monitorRow.rowIndex
+            onClicked: root.toggleDisplay(monitorRow.display.name, monitorRow.display.enabled)
+            onHovered: function(isHovered) {
+              if (!isHovered || root.reflowingText) return
+              root.cursorActive = true
+              root.focusSection = "monitors"
+              root.selectedIndex = monitorRow.rowIndex
+            }
+          }
         }
       }
     }
