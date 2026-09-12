@@ -58,6 +58,7 @@ Combined the Omarchy monitor extender UI with display controls and persistent id
 - Show the Displays section and per-monitor resolution/refresh controls for a single connected display while keeping arrangement multi-monitor-only.
 - Added a `hyprctl monitors all -j` fallback so a transient empty `omarchy-monitor-state` result cannot hide single-display controls.
 - Committed and pushed the single-display control fix as `c802dac`.
+- Committed and pushed the monitor-state fallback fix as `ae47f99`.
 - Corrected the README install command to use the public GitHub repository URL.
 - Migrated the plugin identity and active local install from `soulshocker` to `thetxeagle`.
 
