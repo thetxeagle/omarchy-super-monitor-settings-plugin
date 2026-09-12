@@ -18,10 +18,10 @@ Other settings use their native Omarchy persistence paths: text size uses the Om
 
 ## Install
 
-From the checked-out plugin directory:
+Install directly from GitHub:
 
 ```sh
-omarchy plugin add /home/soulshocker/GitHub/omarchy-super-monitor-settings-plugin --enable
+omarchy plugin add https://github.com/thetxeagle/omarchy-super-monitor-settings-plugin.git --enable
 ```
 
 Open the monitor icon in the Omarchy bar. The plugin replaces the stock display widget in place. Move it with:

@@ -55,6 +55,7 @@ Combined the Omarchy monitor extender UI with display controls and persistent id
 - Verified plugin schema, Bash syntax, diff whitespace, and absence of stale global refresh-dropdown bindings.
 - Fixed monitor action buttons to an explicit `86x28` size.
 - Added pointer-leave cleanup and separate keyboard-vs-pointer monitor selection state.
+- Corrected the README install command to use the public GitHub repository URL.
 
 ## Next Steps
 
