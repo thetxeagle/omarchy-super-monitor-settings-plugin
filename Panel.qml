@@ -173,6 +173,11 @@ Panel {
     if (!next.idle || typeof next.idle !== "object") next.idle = {}
     next.idle.screensaver = Math.max(30, Math.round(Number(screensaver)))
     next.idle.lock = Math.max(next.idle.screensaver, Math.round(Number(lock)))
+    // Update the panel's source of truth before the asynchronous FileView
+    // watcher reports the atomic write. Without this, the file saves
+    // correctly but the sliders keep rendering the previous values until a
+    // later shell refresh.
+    root.shellConfig = next
     shellConfigFile.setText(JSON.stringify(next, null, 2) + "\n")
   }
 
