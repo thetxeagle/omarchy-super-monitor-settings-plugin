@@ -1,0 +1,58 @@
+# Session: Super Monitor Settings foundation
+
+**Date**: 2026-09-11
+**Branch**: main
+**Project**: `/home/soulshocker/GitHub/omarchy-super-monitor-settings-plugin`
+**Duration**: Implementation slice
+
+## Summary
+
+Combined the Omarchy monitor extender UI with display controls and persistent idle settings. Added transactional monitor-layout persistence so live changes survive reloads and reboots.
+
+## Work Completed
+
+- Added the upstream monitor extender panel and model as the combined UI base.
+- Added atomic `shell.json` editing for screensaver and lock timeouts.
+- Added resolution selection to each monitor row.
+- Added a persistence helper that writes a marked `monitors.lua` block, creates a first-write backup, validates with Hyprland, and rolls back rejected configs.
+- Added a plugin manifest and user-facing README.
+
+## Files Changed
+
+### Created
+
+- `Panel.qml`
+- `Model.js`
+- `manifest.json`
+- `bin/omarchy-super-monitor-settings`
+- `preview.png`
+- `.gitignore`
+
+### Modified
+
+- `README.md`
+- `LICENSE` (preserved the repository's original copyright)
+
+## Decisions Made
+
+- Use the extender's richer panel as the integration point instead of maintaining three competing widgets.
+- Persist monitor state from Hyprland's post-action runtime state, avoiding hand-authored Lua and preserving unrelated user monitor config.
+- Use direct atomic `FileView` writes for `shell.json` because plugin API exposure varies across Omarchy versions.
+
+## Testing Notes
+
+- `bash -n bin/omarchy-super-monitor-settings` passed.
+- `omarchy plugin validate .` passed.
+- `git diff --check` passed.
+- JSON-to-Lua monitor rendering was checked with a representative monitor payload.
+- Full Quickshell runtime launch was attempted but could not start in this headless session because no Wayland/X11 display is available.
+
+## Next Steps
+
+- [ ] Run the plugin inside the Eagle's active Omarchy session and exercise each control.
+- [ ] Confirm the saved monitor block and rollback path against the local Hyprland version.
+- [ ] Commit and push after runtime validation.
+
+## Notes
+
+The plugin is intentionally scoped to user-owned config locations and does not edit `/usr/share/omarchy/`.
