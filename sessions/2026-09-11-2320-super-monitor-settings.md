@@ -57,6 +57,7 @@ Combined the Omarchy monitor extender UI with display controls and persistent id
 - Added pointer-leave cleanup and separate keyboard-vs-pointer monitor selection state.
 - Show the Displays section and per-monitor resolution/refresh controls for a single connected display while keeping arrangement multi-monitor-only.
 - Added a `hyprctl monitors all -j` fallback so a transient empty `omarchy-monitor-state` result cannot hide single-display controls.
+- Kept the monitor row fully enabled when only one display is active; only its Turn Off button remains disabled.
 - Committed and pushed the single-display control fix as `c802dac`.
 - Committed and pushed the monitor-state fallback fix as `ae47f99`.
 - Corrected the README install command to use the public GitHub repository URL.

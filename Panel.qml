@@ -1787,7 +1787,9 @@ Panel {
     fill: Style.hoverFillFor(root.bar.foreground, Color.accent)
     currentFill: Style.selectedFillFor(root.bar.foreground, Color.accent)
     implicitHeight: monitorInner.implicitHeight + Style.spacing.xl
-    opacity: canToggle ? 1.0 : 0.45
+    // The last enabled monitor cannot be turned off, but its resolution,
+    // refresh, and rotation controls must remain fully usable.
+    opacity: 1.0
 
     Row {
       id: monitorInner
