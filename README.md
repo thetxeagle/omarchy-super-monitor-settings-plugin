@@ -12,6 +12,8 @@ One Omarchy bar widget for tuning monitors, display layout, cursor/UI sizing, br
 
 Monitor actions are applied live, then captured into a marked block in `~/.config/hypr/monitors.lua`. The plugin creates a first-write backup at `~/.config/omarchy/monitors.lua.before-super-monitor-settings`.
 
+Turn Off is temporary and does not remove the monitor from the saved layout. Turn On reloads that preserved layout so the monitor returns with its saved mode, position, scale, and rotation.
+
 Before accepting a saved monitor layout, the helper reloads Hyprland and checks `hyprctl configerrors`. A rejected layout is rolled back automatically. Idle values are written atomically to `~/.config/omarchy/shell.json` while preserving the rest of the file; lock time is always kept at or after the screensaver time.
 
 Other settings use their native Omarchy persistence paths: text size uses the Omarchy command, cursor size uses GNOME settings, and the Night Light button uses Omarchy's own toggle command.

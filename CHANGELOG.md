@@ -14,5 +14,6 @@
 - Fall back to the richer Hyprland monitor query when the shared monitor-state helper returns no displays.
 - Keep single-monitor display settings enabled when the Turn Off action is unavailable.
 - Update idle controls immediately after saving so they do not display stale timeout values.
+- Keep Turn Off temporary so re-enabling a monitor restores its saved mode, position, scale, and rotation.
 - Corrected the README install command to use the GitHub repository URL instead of a machine-specific home path.
 - Renamed the published plugin identity from `io.github.soulshocker.super-monitor-settings` to `io.github.thetxeagle.super-monitor-settings`.

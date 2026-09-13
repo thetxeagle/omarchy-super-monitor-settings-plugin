@@ -63,12 +63,15 @@ Combined the Omarchy monitor extender UI with display controls and persistent id
 - Committed and pushed the monitor-state fallback fix as `ae47f99`.
 - Corrected the README install command to use the public GitHub repository URL.
 - Migrated the plugin identity and active local install from `soulshocker` to `thetxeagle`.
+- Diagnosed Turn Off resetting monitor configuration: the post-action persistence pass omitted disabled outputs from `monitors.lua`.
+- Changed Turn Off to skip persistence and Turn On to reload the preserved monitor layout.
 
 ## Next Steps
 
 - [ ] Run the plugin inside the Eagle's active Omarchy session and exercise each control.
 - [ ] Confirm the saved monitor block and rollback path against the local Hyprland version.
 - [ ] Run the single-display layout in the active Omarchy session and confirm the mode controls populate.
+- [ ] Test Turn Off/Turn On and confirm saved rotation, mode, position, and scale are restored.
 - [x] Commit and push the validated code/documentation slice.
 
 ## Notes

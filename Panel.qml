@@ -55,6 +55,9 @@ Panel {
   // popup closed. See runAction for why this is the *second* of two
   // reopen mechanisms (this one in-memory, the other file-based).
   property bool pendingReopen: false
+  // Most monitor actions update the saved layout. Turn Off is the exception:
+  // it changes runtime state only and must not delete the output's saved rule.
+  property bool persistAfterAction: true
   property bool nightLightEnabled: false
   readonly property string persistencePath: Qt.resolvedUrl("bin/omarchy-super-monitor-settings").toString().replace("file://", "")
 
@@ -765,17 +768,20 @@ Panel {
     if (!name) return
     if (enabled && root.enabledDisplayCount <= 1) return
 
-    var lua
     if (enabled) {
-      lua = 'hl.monitor({ output = "' + name + '", disabled = true })'
+      // Turning a display off is temporary. Persisting this state would
+      // remove the output from monitors.lua, so a later Turn On would lose
+      // its saved mode, position, scale, and rotation.
+      var disableLua = 'hl.monitor({ output = "' + name + '", disabled = true })'
+      runAction(["hyprctl", "eval", disableLua], false)
+      return
     } else {
-      // disabled must be set explicitly false to re-enable — omitting it
-      // leaves a previously-disabled monitor disabled (confirmed live).
-      var info = root.monitorInfoByName[name]
-      var scale = info && info.scale ? info.scale : 1
-      lua = 'hl.monitor({ output = "' + name + '", mode = "preferred", position = "auto", scale = ' + scale + ', disabled = false })'
+      // Reload the preserved managed layout instead of reconstructing this
+      // monitor from a disabled live record that may contain default/zero
+      // geometry. Its saved hl.monitor rule explicitly re-enables it.
+      runAction(["hyprctl", "reload"])
+      return
     }
-    runAction(["hyprctl", "eval", lua])
   }
 
   function setScale(scale) {
@@ -1057,7 +1063,8 @@ Panel {
     return "${XDG_RUNTIME_DIR:-/tmp}/omarchy-monitor-panel-reopen." + panelScreenName()
   }
 
-  function runAction(command) {
+  function runAction(command, shouldPersist) {
+    root.persistAfterAction = shouldPersist !== false
     if (root.opened) {
       root.pendingReopen = true
       pendingReopenExpire.restart()
@@ -1091,6 +1098,10 @@ Panel {
     // that was never actually overlapping, undoing a just-completed drag.
     onRunningChanged: {
       if (running) return
+      if (!root.persistAfterAction) {
+        actionSettleTimer.restart()
+        return
+      }
       // Capture the post-action Hyprland state into monitors.lua. The helper
       // writes a marked block, keeps a first-write backup, and rolls back if
       // hyprctl reports a config error.
