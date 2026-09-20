@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CONFIG_ROOT="${XDG_CONFIG_HOME:-$HOME/.config}"
+MONITORS_FILE="$CONFIG_ROOT/hypr/monitors.lua"
+STATE_DIR="$CONFIG_ROOT/omarchy"
+BACKUP_FILE="$STATE_DIR/monitors.lua.before-super-monitor-settings"
+START_MARKER="-- BEGIN omarchy-super-monitor-settings"
+END_MARKER="-- END omarchy-super-monitor-settings"
+
+fail() {
+  echo "omarchy-super-monitor-settings: $*" >&2
+  exit 1
+}
+
+require_runtime() {
+  command -v hyprctl >/dev/null || fail "hyprctl is not available"
+  command -v jq >/dev/null || fail "jq is not available"
+}
+
+render_block() {
+  local monitors="$1"
+  printf '%s\n' "$START_MARKER"
+  jq -r '
+    .[] | select(.disabled != true and .width > 0 and .height > 0)
+    | "hl.monitor({ output = \(.name | @json), mode = \"\(.width|floor)x\(.height|floor)@\(.refreshRate)\", position = \"\(.x|floor)x\(.y|floor)\", scale = \(.scale), transform = \(.transform // 0) })"
+  ' <<<"$monitors"
+  printf '%s\n' "$END_MARKER"
+}
+
+persist() {
+  require_runtime
+  local monitors current next errors
+  monitors=$(hyprctl monitors -j)
+  jq -e 'type == "array"' <<<"$monitors" >/dev/null || fail "Hyprland returned invalid monitor data"
+
+  mkdir -p "$STATE_DIR" "$(dirname "$MONITORS_FILE")"
+  [[ -f "$MONITORS_FILE" ]] || : >"$MONITORS_FILE"
+  [[ -f "$BACKUP_FILE" ]] || cp -- "$MONITORS_FILE" "$BACKUP_FILE"
+
+  current=$(mktemp "$STATE_DIR/super-monitor-current.XXXXXX")
+  next=$(mktemp "$STATE_DIR/super-monitor-next.XXXXXX")
+  trap 'rm -f "$current" "$next"' RETURN
+  cp -- "$MONITORS_FILE" "$current"
+
+  awk -v start="$START_MARKER" -v end="$END_MARKER" '
+    $0 == start { managed = 1; next }
+    $0 == end { managed = 0; next }
+    !managed { print }
+  ' "$MONITORS_FILE" >"$next"
+  printf '\n' >>"$next"
+  render_block "$monitors" >>"$next"
+  install -m 0644 "$next" "$MONITORS_FILE"
+
+  hyprctl reload >/dev/null
+  errors=$(hyprctl configerrors 2>/dev/null || true)
+  if [[ -n "$errors" ]]; then
+    install -m 0644 "$current" "$MONITORS_FILE"
+    hyprctl reload >/dev/null 2>&1 || true
+    fail "Hyprland rejected the saved monitor configuration: $errors"
+  fi
+}
+
+case "${1:-}" in
+  persist) persist ;;
+  *) fail "usage: $0 persist" ;;
+esac

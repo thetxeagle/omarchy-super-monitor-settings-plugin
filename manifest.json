@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.thetxeagle.super-monitor-settings",
+  "name": "Super Monitor Settings",
+  "version": "1.0.0",
+  "author": "thetxeagle",
+  "license": "MIT",
+  "description": "Persistent all-in-one Omarchy monitor, display, idle, and layout settings.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Super Monitor Settings",
+    "description": "Tune displays live and save the working monitor layout, idle timers, and desktop settings.",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  },
+  "omarchy": {
+    "clonedFrom": "omarchy.monitor"
+  }
+}
